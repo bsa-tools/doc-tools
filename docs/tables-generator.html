@@ -282,7 +282,8 @@ new Vue({
       alert('HTML code copied to clipboard!');
     },
     copyToClipboardTwo() {
-        const range = document.createRange();
+      yaCounter95903421.reachGoal('copy-html');
+      const range = document.createRange();
       range.selectNode(document.getElementById('rendered-table'));
 
       const selection = window.getSelection();
@@ -300,6 +301,7 @@ new Vue({
       }
     },
     copyMarkdownToClipboard() {
+      yaCounter95903421.reachGoal('copy-md');
       const textarea = document.createElement('textarea');
       textarea.value = this.generatedMarkdown;
       document.body.appendChild(textarea);
