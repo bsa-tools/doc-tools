@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HTML & Markdown Table Generator</title>
+  <meta property="og:title" content="Free HTML & Markdown Table Generator for Database Documentation">
+  <meta property="og:site_name" content="BSA Tools">
+  <meta property="og:url" content="https://bsa-tools.github.io/doc-tools/">
+  <meta property="og:description" content="Easily create HTML and Markdown Tables when Designing Database Tables">
+  <meta property="og:image" content="https://bsa-tools.github.io/doc-tools/assets/tables-generator-preview.png">
   <!-- Include Vue.js and Tailwind CSS -->
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -181,8 +186,23 @@ new Vue({
     ],
     databaseTypes: [
       { name: 'integer' },
+      { name: 'bigint' },
+      { name: 'decimal' },
+
+      { name: 'char' },
+      { name: 'varchar' },
       { name: 'text' },
+
       { name: 'timestamp' },
+      { name: 'timestamptz' },
+      { name: 'time' },
+      { name: 'date' },
+      { name: 'interval' },
+
+      { name: 'boolean' },
+      { name: 'json' },
+      { name: 'jsonb' },
+      { name: 'uuid' },
     ],
     generatedHTML: '',
     generatedMarkdown: '',
