@@ -229,7 +229,6 @@ new Vue({
     ],
     columnSettings: [
       {name: "primary key", code: "pk", representation: "🔑 PK" },
-      {name: "null", code: "null", representation: "NULL" },
       {name: "not null", code: "notnull", representation: "NOT NULL" },
       {name: "unique", code: "unique", representation: "UNIQUE" }
     ],
@@ -249,8 +248,11 @@ new Vue({
     },
     generateHTML() {
 
-      function generateSettingsHTMLStr(settingsArray) {
+      function generateSettingsHTMLStr(settingsArray, md=false) {
         const descriptionArray = settingsArray.map(obj => obj.representation);
+        if (md) {
+          return descriptionArray.map(obj => "`" + obj + "`").join(", ");
+        }
         return descriptionArray.join(", ");
 
       }
@@ -288,7 +290,7 @@ new Vue({
         const markdownHeaderRow = `| ${'Name'.padEnd(maxWidths.name)} | ${'Type'.padEnd(maxWidths.type)} | ${'Settings'.padEnd(maxWidths.settings)} | ${'Description'.padEnd(maxWidths.description)} |`;
         const mkdivider = `| ${''.padEnd(maxWidths.name, "-")} | ${''.padEnd(maxWidths.type, "-")} | ${''.padEnd(maxWidths.settings, "-")} | ${''.padEnd(maxWidths.description, "-")} |`;
         const markdownDataRows = this.fields.map(field => {
-            return `| ${field.name.padEnd(maxWidths.name)} | ${field.type ? field.type.name.padEnd(maxWidths.type) : ''.padEnd(maxWidths.type)} | ${field.settings ? generateSettingsHTMLStr(field.settings).padEnd(maxWidths.settings) : ''.padEnd(maxWidths.settings)} | ${field.description.padEnd(maxWidths.description)} |`;
+            return `| ${field.name.padEnd(maxWidths.name)} | ${field.type ? field.type.name.padEnd(maxWidths.type) : ''.padEnd(maxWidths.type)} | ${field.settings ? generateSettingsHTMLStr(field.settings, true).padEnd(maxWidths.settings) : ''.padEnd(maxWidths.settings)} | ${field.description.padEnd(maxWidths.description)} |`;
         }).join('\n');
 
         this.generatedMarkdown = `${markdownHeaderRow}\n${mkdivider}\n${markdownDataRows}`;
