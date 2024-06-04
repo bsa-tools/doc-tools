@@ -60,13 +60,58 @@
           <h1 class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 text-center">HTML & Markdown Table Generator <br>for Database Documentation</h1>
           
           <div id="app" class="mx-auto">
-            <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+            <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5" >
 
-              <div class="flex items-center justify-between flex-column flex-wrap md:flex-row space-y-4 md:space-y-0 pb-4 bg-white">
+              <div class="flex items-center justify-between flex-column flex-wrap md:flex-row space-y-4 md:space-y-0 pb-4 bg-white inline-flex" role="group">
                 <div>
                   <button @click="addField" class="text-gray-600 bg-white shadow border border-gray-300 hover:shadow-md active:bg-gray-200 px-4 py-1 rounded">Add Field</button>
                 </div>
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="checkbox" value="" class="sr-only peer" @click="toggleDdlInput">
+                  <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">I have DDL</span>
+                </label>
+
+
               </div>
+
+              <div v-show="showDdlInput" class="mb-5">
+
+                <form class="max-w-sm mx-auto" v-show="false">
+                  <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select an option</label>
+                  <select id="countries" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option selected>Choose a database engine</option>
+                    <option value="US">SQL</option>
+                    <option value="CA">HQL (Hive)</option>
+                    <option value="FR">MSSQL dialec</option>
+                    <option value="DE">Oracle dialect</option>
+                    <option value="DE">MySQL dialect</option>
+                    <option value="DE">PostgreSQL dialect</option>
+                    <option value="DE">BigQuery</option>
+                    <option value="DE">Redshift</option>
+                    <option value="DE">Snowflake</option>
+                    <option value="DE">SparkSQL</option>
+                    <option value="DE">IBM DB2 dialect</option>
+
+                  </select>
+                </form>
+
+                
+                
+                <label for="message" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">DDL script</label>
+                <textarea v-model="ddlScript"  id="message" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Insert your DDL script here..."></textarea>
+              
+                <div>
+                  <button @click="parseDdl" v-if="ddlScript" class="text-gray-600 bg-white shadow border border-gray-300 hover:shadow-md active:bg-gray-200 px-4 py-1 rounded ml-auto float-right my-3">Fill in the table fields</button>
+                </div>
+              </div>
+
+              
+
+
+
+
+
                 <table>
                     <thead>
                       <tr>
@@ -254,13 +299,15 @@ new Vue({
       {name: "not null", code: "notnull", representation: "NOT NULL" },
       {name: "unique", code: "unique", representation: "UNIQUE" }
     ],
+    ddlScript: '',
     generatedHTML: '',
     generatedMarkdown: '',
-    tablesRendered: false
+    tablesRendered: false,
+    showDdlInput: false
   },
   methods: {
     addField() {
-      this.fields.push({ name: '', type: null, description: '' });
+      this.fields.unshift({ name: '', type: null, description: '' });
     },
     removeField(index) {
       this.fields.splice(index, 1);
@@ -268,6 +315,78 @@ new Vue({
     addRowAfter(index) {
       this.fields.splice(index + 1, 0, { name: '', type: null, description: '' });
     },
+    toggleDdlInput() {
+      this.showDdlInput = !this.showDdlInput;
+    },
+    fillFieldsFromTables(tables) {
+      if (tables.length === 0) {
+        alert("No tables available");
+        return
+      }
+
+      this.fields = [];
+      function getDatabaseType(columnType, databaseTypes) {
+        const lowercasedValue = columnType.toLowerCase();
+        const foundType = databaseTypes.find(type => type.name.toLowerCase() === lowercasedValue);
+        if (foundType) {
+          return foundType;
+        } else {
+          var addType = {name: lowercasedValue};
+          databaseTypes.push(addType);
+          return addType;
+        }
+      }
+
+      function fillSettings(table, column, savedContext) {
+        colSettings = []
+        if (table.primary_key.includes(column.name)) {
+          colSettings.push({name: "primary key", code: "pk", representation: "🔑 PK" })
+        }
+        if (column.unique === true) {
+          colSettings.push({name: "unique", code: "unique", representation: "UNIQUE" })
+        }
+        if (column.nullable === false) {
+          colSettings.push({name: "not null", code: "notnull", representation: "NOT NULL" })
+        }
+        return colSettings;
+      }
+
+      table = tables[0];
+      table.columns.forEach(column => {
+        const newField = {
+          name: column.name,
+          type: getDatabaseType(column.type, this.databaseTypes),
+          settings: fillSettings(table, column, this), 
+          description: ''
+        };
+
+        this.fields.push(newField);
+      });
+    },
+    parseDdl() {
+
+      const raw = this.ddlScript;
+
+      fetch('https://back4front-1-q3060630.deta.app/tools/parse-ddl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain', 
+        },
+        body: raw,
+    })
+      .then(response => response.json())
+      .then(data => {
+        const contentObject = JSON.parse(data.content);
+        console.log(contentObject);
+        this.fillFieldsFromTables(contentObject.tables)
+        
+      })
+      .catch(error => {
+        console.error(error);
+        alert("error while parsing DDL")
+      });
+    },
+
     generateHTML() {
 
       function generateSettingsHTMLStr(settingsArray, md=false) {
